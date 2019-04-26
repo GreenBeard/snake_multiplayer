@@ -6,8 +6,22 @@
 #include <poll.h>
 #include <stdio.h>
 #include <sys/select.h>
-#include <termios.h>
-#include <unistd.h>
+
+struct player_state* find_player_by_id(struct player_state* states, size_t states_len, unsigned int player_id) {
+  for (size_t i = 0; i < states_len; ++i) {
+    if (states[i].id == player_id) {
+      return states + i;
+    }
+  }
+  return NULL;
+}
+
+void find_game_tile_pos(const struct board_tile* tile, unsigned int* x, unsigned int* y, unsigned int width, unsigned int height, const struct board_tile* board) {
+  assert(tile != NULL && x != NULL && y != NULL);
+  size_t delta = tile - board;
+  *x = delta % width;
+  *y = delta / width;
+}
 
 const struct board_tile* find_const_game_tile(unsigned int x, unsigned int y, unsigned int width, unsigned int height, const struct board_tile* board) {
   size_t offset = width * y + x;
@@ -15,28 +29,29 @@ const struct board_tile* find_const_game_tile(unsigned int x, unsigned int y, un
 }
 
 struct board_tile* find_game_tile_direction(struct board_tile* tile, enum direction direction, unsigned int width, unsigned int height, const struct board_tile* board) {
-  /* TODO return NULL for off the map east and west */
-  ptrdiff_t offset;
+  unsigned int x;
+  unsigned int y;
+  find_game_tile_pos(tile, &x, &y, width, height, board);
   switch (direction) {
     case direction_north:
-      offset = ((ptrdiff_t) width);
+      ++y;
       break;
     case direction_south:
-      offset = -((ptrdiff_t) width);
+      --y;
       break;
     case direction_east:
-      offset = 1;
+      ++x;
       break;
     case direction_west:
-      offset = -1;
+      --x;
       break;
     default:
       assert(false);
   }
-  if (board > tile + offset || tile + offset - board >= width * height) {
+  if (x >= width || y >= height) {
     return NULL;
   } else {
-    return tile + offset;
+    return find_game_tile(x, y, width, height, board);
   }
 }
 
@@ -89,7 +104,7 @@ enum direction pop_queued_movement(enum direction queued_movements[PLAYER_QUEUED
   return direction;
 }
 
-bool getc_ready(int file_descriptor) {
+bool is_fd_ready(int file_descriptor) {
   int status;
 
   #ifdef _WIN32
@@ -101,7 +116,7 @@ bool getc_ready(int file_descriptor) {
   zero_timeval.tv_sec = 0;
   zero_timeval.tv_usec = 0;
 
-  status = select(file_descriptor + 1, &stdin_set, NULL, NULL, &zero_timeval);*/
+  status = select(file_descriptor + 1, &stdin_set, NULL, NULL, &zero_timeval);
 
   #else
   struct pollfd pfd;
@@ -113,39 +128,6 @@ bool getc_ready(int file_descriptor) {
 
   if (status == 1) {
     return true;
-  } else {
-    return false;
-  }
-}
-
-struct termios original_term;
-bool reset_terminal(void) {
-  if (tcsetattr(STDIN_FILENO, TCSANOW, &original_term) == 0) {
-    while (getc_ready(STDIN_FILENO)) {
-      getc(stdin);
-    }
-    return true;
-  } else {
-    return false;
-  }
-}
-
-bool setup_terminal(void) {
-  /* disable input buffering */
-  setvbuf(stdin, NULL, _IONBF, 0);
-
-  /* reset the terminal screen (cursor, scrolling, etc.) */
-  printf("\033c");
-  struct termios term;
-
-  if (tcgetattr(STDIN_FILENO, &term) == 0) {
-    original_term = term;
-    term.c_lflag &= ~(ECHO | ICANON);
-    if (tcsetattr(STDIN_FILENO, TCSANOW, &term) == 0) {
-      return true;
-    } else {
-      return false;
-    }
   } else {
     return false;
   }

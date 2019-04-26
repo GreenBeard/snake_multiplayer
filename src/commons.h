@@ -8,6 +8,18 @@
 #define TICK_RATE 5
 #define TICK_DURATION_US 1000*1000/TICK_RATE
 
+#define PLAYER_NAME_SIZE 32
+#define PLAYER_QUEUED_MOVEMENTS_SIZE 8
+#define MAX_PLAYER_COUNT 4
+
+#ifdef __GNUC__
+#define likely(x)       __builtin_expect((x), 1)
+#define unlikely(x)     __builtin_expect((x), 0)
+#else
+#define likely(x)       (x)
+#define unlikely(x)     (x)
+#endif
+
 struct player_state;
 
 enum board_tile_type {
@@ -43,17 +55,15 @@ struct board_tile {
   union board_tile_data data;
 };
 
-#define PLAYER_QUEUED_MOVEMENTS_SIZE 8
-
 struct player_state {
   unsigned int id;
   unsigned int score;
   bool fed;
   bool is_alive;
   enum direction queued_movements[PLAYER_QUEUED_MOVEMENTS_SIZE];
-  /**/
   struct board_tile* head;
   struct board_tile* tail;
+  char name[PLAYER_NAME_SIZE];
 };
 
 struct game_state {
@@ -65,6 +75,10 @@ struct game_state {
 };
 
 #define find_game_tile(x, y, width, height, board) ((struct board_tile*) find_const_game_tile((x), (y), (width), (height), (board)))
+
+struct player_state* find_player_by_id(struct player_state* states, size_t states_len, unsigned int player_id);
+
+void find_game_tile_pos(const struct board_tile* tile, unsigned int* x, unsigned int* y, unsigned int width, unsigned int height, const struct board_tile* board);
 
 /* returns a pointer to the tile *inside* the board (not a copy) */
 const struct board_tile* find_const_game_tile(unsigned int x, unsigned int y, unsigned int width, unsigned int height, const struct board_tile* board);
@@ -81,10 +95,6 @@ void push_queued_movement(enum direction queued_movements[PLAYER_QUEUED_MOVEMENT
 
 enum direction pop_queued_movement(enum direction queued_movements[PLAYER_QUEUED_MOVEMENTS_SIZE]);
 
-bool getc_ready(int file_descriptor);
-
-bool setup_terminal(void);
-
-bool reset_terminal(void);
+bool is_fd_ready(int file_descriptor);
 
 #endif
