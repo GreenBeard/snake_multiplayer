@@ -11,7 +11,7 @@ networking and finally sending casting them to char*. A non-networking version
 of each struct is also necessary if decent performance (and proper aliasing
 rules) are desired.
 
-A "screenshot" is below:
+A "screenshot" is below (for best Github viewing choose RAW mode):
 
 Tick: 120
                                                                                 
