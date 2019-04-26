@@ -1,0 +1,39 @@
+A multiplayer terminal version of the old game "snake". Currently only
+singeplayer functions properly. Multiplayer has the beginnings of what would
+be necessary to function. This project took more time than expected, and college
+has soaked up more of it recently, leaving this project sitting in a temporarily
+unfinished state.
+
+I am sure that many aspects could have been written more quickly if it wasn't my
+first time dealing with networking in C. A tip some people suggest on the web
+is using #pragma pack on network structures then changing their byte order to
+networking and finally sending casting them to char*. A non-networking version
+of each struct is also necessary if decent performance (and proper aliasing
+rules) are desired.
+
+A "screenshot" is below:
+
+Tick: 120
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                              ▄                                                 
+                            █▀▀                          ▀                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+               ▀                                                                
+                                                                                
+                                                                                
+                          ▀                                                     
